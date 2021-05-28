@@ -24,75 +24,23 @@ using namespace Zeeker;
 SearchResultManager::SearchResultManager(const QString& plugin_id, QObject *parent) : QObject(parent)
 {
     m_plugin_id = plugin_id;
-    m_result_queue = new QQueue<SearchPluginIface::ResultInfo>;
+    m_result_queue = new DataQueue<SearchPluginIface::ResultInfo>;
     m_get_result_thread = new ReceiveResultThread(m_result_queue);
     initConnections();
 }
 
 void SearchResultManager::startSearch(const QString &keyword)
 {
-    //NEW_TODO 加锁？停止线程？重新搜索？
-//    stopSearch();
-    qDebug()<<m_plugin_id<<"------------------>start by others";
+    qDebug()<<m_plugin_id<<"Search thread started by others!";
     if(! m_get_result_thread->isRunning()) {
         m_get_result_thread->start();
     }
     m_result_queue->clear();
     SearchPluginIface *plugin = SearchPluginManager::getInstance()->getPlugin(m_plugin_id);
-//    plugin->KeywordSearch(keyword, m_result_queue);
-    /*********************测试用数据*********************/
-//    SearchPluginIface::ResultInfo test_info;
-//    if (m_plugin_id == "File") {
-//        test_info.icon = QIcon::fromTheme("ukui-control-center");
-//        test_info.name = "搜索";
-//        QVector<SearchPluginIface::DescriptionInfo> desc;
-//        SearchPluginIface::DescriptionInfo desc_1;
-//        desc_1.key = "描述";
-//        desc_1.value = "控制面板搜索插件";
-//        desc.append(desc_1);
-//        QStringList actions;
-//        actions.append("打开");
-//        test_info.description = desc;
-//        test_info.actionList = actions;
-//        m_result_queue->append(test_info);
-//    } else {
-//        test_info.icon = QIcon::fromTheme("unknown");
-//        test_info.name = "文件12345abcde.txt";
-//        QVector<SearchPluginIface::DescriptionInfo> desc;
-//        SearchPluginIface::DescriptionInfo desc_1;
-//        SearchPluginIface::DescriptionInfo desc_2;
-//        desc_1.key = "描述";
-//        desc_1.value = "一个文件";
-//        desc_2.key = "路径";
-//        desc_2.value = "一个路径/a/b/c/d/e/fffffff/文件12345abcde.txt";
-//        desc.append(desc_1);
-//        desc.append(desc_2);
-//        QStringList actions;
-//        actions.append("打开");
-//        actions.append("复制路径");
-//        test_info.description = desc;
-//        test_info.actionList = actions;
-//        SearchPluginIface::ResultInfo test_info_1 = test_info;
-//        test_info_1.name = "文件1";
-//        SearchPluginIface::ResultInfo test_info_2 = test_info;
-//        test_info_2.name = "文件2";
-//        SearchPluginIface::ResultInfo test_info_3 = test_info;
-//        test_info_3.name = "文件3";
-//        SearchPluginIface::ResultInfo test_info_4 = test_info;
-//        test_info_4.name = "文件4";
-//        SearchPluginIface::ResultInfo test_info_5 = test_info;
-//        test_info_5.name = "文件5";
-//        SearchPluginIface::ResultInfo test_info_6 = test_info;
-//        test_info_6.name = "文件6";
-//        m_result_queue->append(test_info);
-//        m_result_queue->append(test_info_1);
-//        m_result_queue->append(test_info_2);
-//        m_result_queue->append(test_info_3);
-//        m_result_queue->append(test_info_4);
-//        m_result_queue->append(test_info_5);
-//        m_result_queue->append(test_info_6);
-//    }
-    /********************测试用数据********************/
+    if (plugin)
+        plugin->KeywordSearch(keyword, m_result_queue);
+    else
+        qWarning()<<"Plugin is not exist! plugin_id="<<m_plugin_id;
 }
 
 /**
@@ -101,7 +49,7 @@ void SearchResultManager::startSearch(const QString &keyword)
 void SearchResultManager::stopSearch()
 {
     if(m_get_result_thread->isRunning()) {
-        qDebug()<<m_plugin_id<<"-------------->stopped by others";
+        qDebug()<<m_plugin_id<<"Search thread stoped by others!";
         m_get_result_thread->stop();
 //        m_get_result_thread->quit();
     }
@@ -112,7 +60,7 @@ void SearchResultManager::initConnections()
     connect(m_get_result_thread, &ReceiveResultThread::gotResultInfo, this, &SearchResultManager::gotResultInfo);
 }
 
-ReceiveResultThread::ReceiveResultThread(QQueue<SearchPluginIface::ResultInfo> * result_queue, QObject *parent)
+ReceiveResultThread::ReceiveResultThread(DataQueue<SearchPluginIface::ResultInfo> * result_queue, QObject *parent)
 {
     m_result_queue = result_queue;
 }
@@ -123,7 +71,6 @@ void ReceiveResultThread::stop()
     this->quit();
 }
 
-//NEW_TODO 还未对队列加锁
 void ReceiveResultThread::run()
 {
     QTimer * m_timer = new QTimer;
@@ -138,7 +85,7 @@ void ReceiveResultThread::run()
         }
         if(m_timer->isActive() && m_timer->remainingTime() < 0.01) {
             this->requestInterruption();
-            qWarning()<<"-------------->stopped by self";
+            qWarning()<<"Search thread stoped by self!";
         }
         if(is_empty && !m_timer->isActive()) {
             m_timer->start();

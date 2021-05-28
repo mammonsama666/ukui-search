@@ -45,7 +45,6 @@ ResultArea::ResultArea(QWidget *parent) : QScrollArea(parent)
 
 void ResultArea::appendWidet(ResultWidget *widget)
 {
-    //NEW_TODO
     m_mainLyt->addWidget(widget);
     setupConnectionsForWidget(widget);
     m_widget_list.append(widget);
@@ -162,10 +161,11 @@ void DetailWidget::setWidgetInfo(const QString &plugin_name, const SearchPluginI
         m_line_2->show();
     }
     clearLayout(m_actionFrameLyt);
-//    Q_FOREACH (auto action, info.actionList) {
-//        ActionLabel * actionLabel = new ActionLabel(action, info.key, plugin_name, m_actionFrame);
-//        m_actionFrameLyt->addWidget(actionLabel);
-//    }
+    SearchPluginIface *plugin = SearchPluginManager::getInstance()->getPlugin(name);
+    Q_FOREACH (auto action, plugin->getActioninfo(info.type)) {
+        ActionLabel * actionLabel = new ActionLabel(action.displayName, action.actionkey, info.actionKey, plugin_name, m_actionFrame);
+        m_actionFrameLyt->addWidget(actionLabel);
+    }
     m_actionFrame->show();
 }
 
@@ -259,10 +259,11 @@ void DetailWidget::clearLayout(QLayout *layout)
     child = NULL;
 }
 
-ActionLabel::ActionLabel(const QString &action, const QString &key, const QString &plugin, QWidget *parent) : QLabel(parent)
+ActionLabel::ActionLabel(const QString &action, const int &action_key, const QString &info_key, const QString &plugin, QWidget *parent) : QLabel(parent)
 {
     m_action = action;
-    m_key = key;
+    m_action_key = action_key;
+    m_info_key = info_key;
     m_plugin = plugin;
     this->initUi();
     this->installEventFilter(this);
@@ -288,9 +289,9 @@ bool ActionLabel::eventFilter(QObject *watched, QEvent *event)
             return true;
         } else if(event->type() == QEvent::MouseButtonRelease) {
             SearchPluginIface *plugin = SearchPluginManager::getInstance()->getPlugin(m_plugin);
-//            if (plugin)
-//                plugin->openAction(m_action, m_key);
-//            else
+            if (plugin)
+                plugin->openAction(m_action_key, m_info_key);
+            else
                 qWarning()<<"Get plugin failed!";
             this->setForegroundRole(QPalette::Light);
             return true;

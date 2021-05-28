@@ -155,11 +155,12 @@ void ResultView::onRowDoubleClickedSlot(const QModelIndex &index)
     SearchPluginIface *plugin = SearchPluginManager::getInstance()->getPlugin(m_plugin_id);
     try {
         if (plugin) {
-//            if (!info.actionList.isEmpty()) {
-//                plugin->openAction(info.actionList.at(0), info.key);
-//            } else {
-//                throw -2;
-//            }
+            QList<SearchPluginIface::Actioninfo> action_list = plugin->getActioninfo(info.type);
+            if (!action_list.isEmpty()) {
+                plugin->openAction(action_list.at(0).actionkey, info.actionKey);
+            } else {
+                throw -2;
+            }
         } else {
             throw -1;
         }
@@ -238,7 +239,6 @@ void ResultView::mousePressEvent(QMouseEvent *event)
 
 void ResultView::initConnections()
 {
-//    connect(this, &ResultView::startSearch, m_model, &SearchResultModel::startSearch);
     connect(this, &ResultView::startSearch, [ = ](const QString &keyword) {
         m_style_delegate->setSearchKeyword(keyword);
         m_model->startSearch(keyword);

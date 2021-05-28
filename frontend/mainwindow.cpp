@@ -92,10 +92,8 @@ MainWindow::MainWindow(QWidget *parent) :
     installEventFilter(this);
     initConnections();
 
-    //NEW_TODO, register plugins
-//    SearchPluginManager::getInstance()->registerPlugin(\\);
-//    m_stackedWidget->setPlugins(SearchPluginManager::getInstance()->getPluginIds());
-    m_stackedWidget->setPlugins(QStringList()<<"File"<<"Folder");
+    //加载所有插件
+    m_stackedWidget->setPlugins(SearchPluginManager::getInstance()->getPluginIds());
 }
 
 MainWindow::~MainWindow() {

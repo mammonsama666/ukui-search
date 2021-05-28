@@ -100,12 +100,13 @@ class ActionLabel : public QLabel
 {
     Q_OBJECT
 public:
-    ActionLabel(const QString &action, const QString &key, const QString &plugin, QWidget *parent = nullptr);
+    ActionLabel(const QString &action, const int &action_key, const QString &info_key, const QString &plugin, QWidget *parent = nullptr);
     ~ActionLabel() = default;
 private:
     void initUi();
     QString m_action;
-    QString m_key;
+    int m_action_key;
+    QString m_info_key;
     QString m_plugin;
 
 protected:

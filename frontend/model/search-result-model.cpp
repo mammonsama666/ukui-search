@@ -33,7 +33,6 @@ QModelIndex SearchResultModel::index(int row, int column, const QModelIndex &par
 {
     if(row < 0 || row > m_item->m_result_info_list.length() - 1)
         return QModelIndex();
-//    QVector<SearchPluginIface::ResultInfo> * m_info = &m_result_info_list;
     return createIndex(row, column, m_item);
 }
 
@@ -125,15 +124,20 @@ const bool &SearchResultModel::isExpanded()
  */
 QStringList SearchResultModel::getActions(const QModelIndex &index)
 {
-    if (m_item->m_result_info_list.length() > index.row() && index.row() >= 0)
-//        return m_item->m_result_info_list.at(index.row()).actionList;
-    return QStringList();
+    QStringList action_list;
+    if (m_item->m_result_info_list.length() > index.row() && index.row() >= 0) {
+        SearchPluginIface *plugin = SearchPluginManager::getInstance()->getPlugin(m_plugin_id);
+        Q_FOREACH (auto action, plugin->getActioninfo(m_item->m_result_info_list.at(index.row()).type)) {
+            action_list.append(action.displayName);
+        }
+    }
+    return action_list;
 }
 
 QString SearchResultModel::getKey(const QModelIndex &index)
 {
     if (m_item->m_result_info_list.length() > index.row() && index.row() >= 0)
-//        return m_item->m_result_info_list.at(index.row()).key;
+        return m_item->m_result_info_list.at(index.row()).actionKey;
     return NULL;
 }
 
